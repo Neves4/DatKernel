@@ -691,11 +691,6 @@ static int bluecard_hci_send_frame(struct sk_buff *skb)
 }
 
 
-static void bluecard_hci_destruct(struct hci_dev *hdev)
-{
-}
-
-
 static int bluecard_hci_ioctl(struct hci_dev *hdev, unsigned int cmd, unsigned long arg)
 {
 	return -ENOIOCTLCMD;
@@ -741,10 +736,7 @@ static int bluecard_open(bluecard_info_t *info)
 	hdev->close    = bluecard_hci_close;
 	hdev->flush    = bluecard_hci_flush;
 	hdev->send     = bluecard_hci_send_frame;
-	hdev->destruct = bluecard_hci_destruct;
 	hdev->ioctl    = bluecard_hci_ioctl;
-
-	hdev->owner = THIS_MODULE;
 
 	id = inb(iobase + 0x30);
 
@@ -844,9 +836,7 @@ static int bluecard_close(bluecard_info_t *info)
 	/* Turn FPGA off */
 	outb(0x80, iobase + 0x30);
 
-	if (hci_unregister_dev(hdev) < 0)
-		BT_ERR("Can't unregister HCI device %s", hdev->name);
-
+	hci_unregister_dev(hdev);
 	hci_free_dev(hdev);
 
 	return 0;

@@ -18,6 +18,8 @@
  * this warranty disclaimer.
  **/
 
+#include <linux/module.h>
+
 #include <net/bluetooth/bluetooth.h>
 #include <net/bluetooth/hci_core.h>
 
@@ -385,10 +387,6 @@ static int btmrvl_ioctl(struct hci_dev *hdev,
 	return -ENOIOCTLCMD;
 }
 
-static void btmrvl_destruct(struct hci_dev *hdev)
-{
-}
-
 static int btmrvl_send_frame(struct sk_buff *skb)
 {
 	struct hci_dev *hdev = (struct hci_dev *) skb->dev;
@@ -473,8 +471,6 @@ static int btmrvl_service_main_thread(void *data)
 
 	init_waitqueue_entry(&wait, current);
 
-	current->flags |= PF_NOFREEZE;
-
 	for (;;) {
 		add_wait_queue(&thread->wait_q, &wait);
 
@@ -553,9 +549,7 @@ int btmrvl_register_hdev(struct btmrvl_private *priv)
 	hdev->close = btmrvl_close;
 	hdev->flush = btmrvl_flush;
 	hdev->send = btmrvl_send_frame;
-	hdev->destruct = btmrvl_destruct;
 	hdev->ioctl = btmrvl_ioctl;
-	hdev->owner = THIS_MODULE;
 
 	btmrvl_send_module_cfg_cmd(priv, MODULE_BRINGUP_REQ);
 

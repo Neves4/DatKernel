@@ -242,14 +242,6 @@ static int hci_uart_send_frame(struct sk_buff *skb)
 	return 0;
 }
 
-static void hci_uart_destruct(struct hci_dev *hdev)
-{
-	if (!hdev)
-		return;
-
-	BT_DBG("%s", hdev->name);
-}
-
 /* ------ LDISC part ------ */
 /* hci_uart_tty_open
  *
@@ -319,6 +311,7 @@ static void hci_uart_tty_close(struct tty_struct *tty)
 			}
 			hu->proto->close(hu);
 		}
+
 		kfree(hu);
 	}
 }
@@ -402,10 +395,7 @@ static int hci_uart_register_dev(struct hci_uart *hu)
 	hdev->close = hci_uart_close;
 	hdev->flush = hci_uart_flush;
 	hdev->send = hci_uart_send_frame;
-	hdev->destruct = hci_uart_destruct;
 	hdev->parent = hu->tty->dev;
-
-	hdev->owner = THIS_MODULE;
 
 	if (!reset)
 		set_bit(HCI_QUIRK_NO_RESET, &hdev->quirks);

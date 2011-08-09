@@ -432,17 +432,6 @@ static int bpa10x_send_frame(struct sk_buff *skb)
 	return 0;
 }
 
-static void bpa10x_destruct(struct hci_dev *hdev)
-{
-	struct bpa10x_data *data = hdev->driver_data;
-
-	BT_DBG("%s", hdev->name);
-
-	kfree_skb(data->rx_skb[0]);
-	kfree_skb(data->rx_skb[1]);
-	kfree(data);
-}
-
 static int bpa10x_probe(struct usb_interface *intf, const struct usb_device_id *id)
 {
 	struct bpa10x_data *data;
@@ -480,9 +469,6 @@ static int bpa10x_probe(struct usb_interface *intf, const struct usb_device_id *
 	hdev->close    = bpa10x_close;
 	hdev->flush    = bpa10x_flush;
 	hdev->send     = bpa10x_send_frame;
-	hdev->destruct = bpa10x_destruct;
-
-	hdev->owner = THIS_MODULE;
 
 	set_bit(HCI_QUIRK_NO_RESET, &hdev->quirks);
 
@@ -512,6 +498,9 @@ static void bpa10x_disconnect(struct usb_interface *intf)
 	hci_unregister_dev(data->hdev);
 
 	hci_free_dev(data->hdev);
+	kfree_skb(data->rx_skb[0]);
+	kfree_skb(data->rx_skb[1]);
+	kfree(data);
 }
 
 static struct usb_driver bpa10x_driver = {
@@ -521,20 +510,7 @@ static struct usb_driver bpa10x_driver = {
 	.id_table	= bpa10x_table,
 };
 
-static int __init bpa10x_init(void)
-{
-	BT_INFO("Digianswer Bluetooth USB driver ver %s", VERSION);
-
-	return usb_register(&bpa10x_driver);
-}
-
-static void __exit bpa10x_exit(void)
-{
-	usb_deregister(&bpa10x_driver);
-}
-
-module_init(bpa10x_init);
-module_exit(bpa10x_exit);
+module_usb_driver(bpa10x_driver);
 
 MODULE_AUTHOR("Marcel Holtmann <marcel@holtmann.org>");
 MODULE_DESCRIPTION("Digianswer Bluetooth USB driver ver " VERSION);
