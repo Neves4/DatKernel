@@ -15,16 +15,21 @@
  * r0-r3,r9,r10,lr corrupted
  */
 ENTRY(cpu_suspend)
+	stmfd	sp!, {r3}
 	mov	r9, lr
 #ifdef MULTI_CPU
 	ldr	r10, =processor
-	mov	r2, sp			@ current virtual SP
 	ldr	r0, [r10, #CPU_SLEEP_SIZE] @ size of CPU sleep state
 	ldr	ip, [r10, #CPU_DO_RESUME] @ virtual resume function
+#else
+	ldr	r0, =cpu_suspend_size
+	ldr	ip, =cpu_do_resume
+#endif
+	mov	r2, sp			@ current virtual SP
 	sub	sp, sp, r0		@ allocate CPU state on stack
 	mov	r0, sp			@ save pointer
 	add	ip, ip, r1		@ convert resume fn to phys
-	stmfd	sp!, {r1, r2, r3, ip}	@ save v:p, virt SP, retfn, phys resume fn
+	stmfd	sp!, {r1, r2, ip}	@ save v:p, virt SP, phys resume fn
 	ldr	r3, =sleep_save_sp
 	add	r2, sp, r1		@ convert SP to phys
 #ifdef CONFIG_SMP
@@ -35,24 +40,10 @@ ENTRY(cpu_suspend)
 #else
 	str	r2, [r3]		@ save phys SP
 #endif
+#ifdef MULTI_CPU
 	mov	lr, pc
 	ldr	pc, [r10, #CPU_DO_SUSPEND] @ save CPU state
 #else
-	mov	r2, sp			@ current virtual SP
-	ldr	r0, =cpu_suspend_size
-	sub	sp, sp, r0		@ allocate CPU state on stack
-	mov	r0, sp			@ save pointer
-	stmfd	sp!, {r1, r2, r3}	@ save v:p, virt SP, return fn
-	ldr	r3, =sleep_save_sp
-	add	r2, sp, r1		@ convert SP to phys
-#ifdef CONFIG_SMP
-	ALT_SMP(mrc p15, 0, lr, c0, c0, 5)
-	ALT_UP(mov lr, #0)
-	and	lr, lr, #15
-	str	r2, [r3, lr, lsl #2]	@ save phys SP
-#else
-	str	r2, [r3]		@ save phys SP
-#endif
 	bl	cpu_do_suspend
 #endif
 
@@ -97,7 +88,7 @@ ENDPROC(cpu_resume_turn_mmu_on)
 cpu_resume_after_mmu:
 	str	r5, [r2, r4, lsl #2]	@ restore old mapping
 	mcr	p15, 0, r0, c1, c0, 0	@ turn on D-cache
-	mov	pc, lr
+	ldmfd	sp!, {pc}
 ENDPROC(cpu_resume_after_mmu)
 
 /*
@@ -120,20 +111,11 @@ ENTRY(cpu_resume)
 	ldr	r0, sleep_save_sp	@ stack phys addr
 #endif
 	setmode	PSR_I_BIT | PSR_F_BIT | SVC_MODE, r1  @ set SVC, irqs off
-#ifdef MULTI_CPU
-	@ load v:p, stack, return fn, resume fn
-  ARM(	ldmia	r0!, {r1, sp, lr, pc}	)
-THUMB(	ldmia	r0!, {r1, r2, r3, r4}	)
+	@ load v:p, stack, resume fn
+  ARM(	ldmia	r0!, {r1, sp, pc}	)
+THUMB(	ldmia	r0!, {r1, r2, r3}	)
 THUMB(	mov	sp, r2			)
-THUMB(	mov	lr, r3			)
-THUMB(	bx	r4			)
-#else
-	@ load v:p, stack, return fn
-  ARM(	ldmia	r0!, {r1, sp, lr}	)
-THUMB(	ldmia	r0!, {r1, r2, lr}	)
-THUMB(	mov	sp, r2			)
-	b	cpu_do_resume
-#endif
+THUMB(	bx	r3			)
 ENDPROC(cpu_resume)
 
 sleep_save_sp:
