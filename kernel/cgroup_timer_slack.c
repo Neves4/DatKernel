@@ -225,16 +225,3 @@ struct cgroup_subsys timer_slack_subsys = {
 	.allow_attach	= tslack_allow_attach,
 	.populate	= tslack_populate,
 };
-
-unsigned long task_get_effective_timer_slack(struct task_struct *tsk)
-{
-	struct cgroup *cgroup;
-	unsigned long slack;
-
-	rcu_read_lock();
-	cgroup = task_cgroup(tsk, timer_slack_subsys.subsys_id);
-	slack = tslack_read_effective(cgroup, NULL);
-	rcu_read_unlock();
-
-	return max(tsk->timer_slack_ns, slack);
-}
