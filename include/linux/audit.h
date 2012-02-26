@@ -452,6 +452,8 @@ static inline void audit_inode_child(const struct dentry *dentry,
 		__audit_inode_child(dentry, parent);
 }
 void audit_core_dumps(long signr);
+/* XXX: implement! */
+#define audit_seccomp(i,s,c) do { ; } while (0)
 
 static inline void audit_ptrace(struct task_struct *t)
 {
@@ -613,6 +615,12 @@ extern void		    audit_log_d_path(struct audit_buffer *ab,
 extern void		    audit_log_key(struct audit_buffer *ab,
 					  char *key);
 extern void		    audit_log_lost(const char *message);
+#ifdef CONFIG_SECURITY
+extern void 		    audit_log_secctx(struct audit_buffer *ab, u32 secid);
+#else
+#define audit_log_secctx(b,s) do { ; } while (0)
+#endif
+
 extern int		    audit_update_lsm_rules(void);
 
 				/* Private API (for audit.c only) */
@@ -635,6 +643,8 @@ extern int audit_enabled;
 #define audit_log_untrustedstring(a,s) do { ; } while (0)
 #define audit_log_d_path(b, p, d) do { ; } while (0)
 #define audit_log_key(b, k) do { ; } while (0)
+#define audit_log_secctx(b,s) do { ; } while (0)
+#define audit_seccomp(i,s,c) do { ; } while (0)
 #define audit_enabled 0
 #endif
 #endif
