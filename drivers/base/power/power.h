@@ -73,3 +73,14 @@ static inline int wakeup_sysfs_add(struct device *dev) { return 0; }
 static inline void wakeup_sysfs_remove(struct device *dev) {}
 
 #endif
+
+#ifdef CONFIG_PM_DEBUG
+
+extern int pm_print_times_enabled;
+#define pm_print_times (initcall_debug || pm_print_times_enabled)
+
+#else /* CONFIG_PM_DEBUG */
+
+#define pm_print_times initcall_debug
+
+#endif /* CONFIG_PM_DEBUG */
