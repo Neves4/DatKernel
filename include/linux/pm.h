@@ -210,6 +210,8 @@ struct dev_pm_ops {
 	int (*thaw)(struct device *dev);
 	int (*poweroff)(struct device *dev);
 	int (*restore)(struct device *dev);
+	int (*suspend_late)(struct device *dev);
+	int (*resume_early)(struct device *dev);
 	int (*suspend_noirq)(struct device *dev);
 	int (*resume_noirq)(struct device *dev);
 	int (*freeze_noirq)(struct device *dev);
@@ -533,6 +535,7 @@ struct dev_power_domain {
 #ifdef CONFIG_PM_SLEEP
 extern void device_pm_lock(void);
 extern void dpm_resume_noirq(pm_message_t state);
+extern void dpm_resume_start(pm_message_t state);
 extern void dpm_resume_end(pm_message_t state);
 extern void dpm_resume(pm_message_t state);
 extern void dpm_complete(pm_message_t state);
@@ -540,6 +543,7 @@ extern void dpm_complete(pm_message_t state);
 extern void device_pm_unlock(void);
 extern int dpm_suspend_noirq(pm_message_t state);
 extern int dpm_suspend_start(pm_message_t state);
+extern int dpm_suspend_end(pm_message_t state);
 extern int dpm_suspend(pm_message_t state);
 extern int dpm_prepare(pm_message_t state);
 
