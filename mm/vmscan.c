@@ -19,6 +19,7 @@
 #include <linux/pagemap.h>
 #include <linux/init.h>
 #include <linux/highmem.h>
+#include <linux/vmpressure.h>
 #include <linux/vmstat.h>
 #include <linux/file.h>
 #include <linux/writeback.h>
@@ -2185,6 +2186,49 @@ restart:
 	throttle_vm_writeout(sc->gfp_mask);
 }
 
+static void shrink_zone(struct zone *zone, struct scan_control *sc)
+{
+	unsigned long nr_reclaimed, nr_scanned;
+	struct mem_cgroup *root = sc->target_mem_cgroup;
+	struct mem_cgroup_reclaim_cookie reclaim = {
+		.zone = zone,
+		.priority = sc->priority,
+	};
+	struct mem_cgroup *memcg;
+
+	nr_reclaimed = sc->nr_reclaimed;
+	nr_scanned = sc->nr_scanned;
+
+	memcg = mem_cgroup_iter(root, NULL, &reclaim);
+	do {
+		struct mem_cgroup_zone mz = {
+			.mem_cgroup = memcg,
+			.zone = zone,
+		};
+
+		shrink_mem_cgroup_zone(&mz, sc);
+		/*
+		 * Limit reclaim has historically picked one memcg and
+		 * scanned it with decreasing priority levels until
+		 * nr_to_reclaim had been reclaimed.  This priority
+		 * cycle is thus over after a single memcg.
+		 *
+		 * Direct reclaim and kswapd, on the other hand, have
+		 * to scan all memory cgroups to fulfill the overall
+		 * scan target for the zone.
+		 */
+		if (!global_reclaim(sc)) {
+			mem_cgroup_iter_break(root, memcg);
+			break;
+		}
+		memcg = mem_cgroup_iter(root, memcg, &reclaim);
+	} while (memcg);
+
+	vmpressure(sc->gfp_mask, sc->target_mem_cgroup,
+		   sc->nr_scanned - nr_scanned,
+		   sc->nr_reclaimed - nr_reclaimed);
+}
+
 /* Returns true if compaction should go ahead for a high-order request */
 static inline bool compaction_ready(struct zone *zone, struct scan_control *sc)
 {
@@ -2358,7 +2402,8 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
 	if (scanning_global_lru(sc))
 		count_vm_event(ALLOCSTALL);
 
-	for (priority = DEF_PRIORITY; priority >= 0; priority--) {
+	do {
+		vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup, sc->priority);
 		sc->nr_scanned = 0;
 		if (!priority)
 			disable_swap_token(sc->mem_cgroup);
