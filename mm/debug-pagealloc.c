@@ -1,7 +1,17 @@
 #include <linux/kernel.h>
 #include <linux/mm.h>
+#include <linux/highmem.h>
 #include <linux/page-debug-flags.h>
 #include <linux/poison.h>
+#include <linux/ratelimit.h>
+
+#ifndef mark_addr_rdonly
+#define mark_addr_rdonly(a)
+#endif
+
+#ifndef mark_addr_rdwrite
+#define mark_addr_rdwrite(a)
+#endif
 
 static inline void set_page_poison(struct page *page)
 {
@@ -40,6 +50,8 @@ static void poison_page(struct page *page)
 	set_page_poison(page);
 	addr = page_address(page);
 	memset(addr, PAGE_POISON, PAGE_SIZE);
+	mark_addr_rdonly(addr);
+	kunmap_atomic(addr);
 }
 
 static void poison_pages(struct page *page, int n)
@@ -103,10 +115,15 @@ static void unpoison_page(struct page *page)
 	}
 	if (page_poison(page)) {
 		void *addr = page_address(page);
-
 		check_poison_mem(addr, PAGE_SIZE);
 		clear_page_poison(page);
 	}
+
+	addr = kmap_atomic(page);
+	check_poison_mem(addr, PAGE_SIZE);
+	mark_addr_rdwrite(addr);
+	clear_page_poison(page);
+	kunmap_atomic(addr);
 }
 
 static void unpoison_pages(struct page *page, int n)
