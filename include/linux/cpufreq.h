@@ -429,4 +429,10 @@ void acct_update_power(struct task_struct *p, cputime_t cputime);
 
 const char *cpufreq_get_current_driver(void);
 
+/*********************************************************************
+ *                         CPUFREQ STATS                             *
+ *********************************************************************/
+
+void acct_update_power(struct task_struct *p, cputime_t cputime);
+
 #endif /* _LINUX_CPUFREQ_H */
