@@ -162,4 +162,5 @@ source "drivers/staging/mei/Kconfig"
 
 source "drivers/staging/nvec/Kconfig"
 
+source "drivers/staging/snappy/Kconfig"
 endif # STAGING
