@@ -2,7 +2,7 @@
 #include <linux/broadcom/vc_debug_sym.h>
 
 VC_DEBUG_DECLARE_STRING_VAR( vchiq_build_hostname, "VictorDell" );
-VC_DEBUG_DECLARE_STRING_VAR( vchiq_build_version, "ac09141971f900a5043cc5595550027b8d7509a7 (tainted)" );
+VC_DEBUG_DECLARE_STRING_VAR( vchiq_build_version, "7890e71a37ab7ea19dc56e760ca450f159c23ea0 (tainted)" );
 VC_DEBUG_DECLARE_STRING_VAR( vchiq_build_time,    __TIME__ );
 VC_DEBUG_DECLARE_STRING_VAR( vchiq_build_date,    __DATE__ );
 

@@ -34,7 +34,7 @@ extern void kunmap_high(struct page *page);
  * the IPI mechanism used by global TLB operations.
  */
 #define ARCH_NEEDS_KMAP_HIGH_GET
-#if defined(CONFIG_SMP) && defined(CONFIG_CPU_TLB_V6)
+#if defined(CONFIG_SMP) && defined(CONFIG_CPU_TLB_V7)
 #undef ARCH_NEEDS_KMAP_HIGH_GET
 #if defined(CONFIG_HIGHMEM) && defined(CONFIG_CPU_CACHE_VIVT)
 #error "The sum of features in your kernel config cannot be supported together"

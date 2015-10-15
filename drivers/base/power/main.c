@@ -133,7 +133,7 @@ void device_pm_move_before(struct device *deva, struct device *devb)
 	pr_debug("PM: Moving %s:%s before %s:%s\n",
 		 deva->bus ? deva->bus->name : "No Bus", dev_name(deva),
 		 devb->bus ? devb->bus->name : "No Bus", dev_name(devb));
-	if (!((devb->pm_domain) || (devb->type && devb->type->pm)
+	if (!((devb->pwr_domain) || (devb->type && devb->type->pm)
 		|| (devb->class && (devb->class->pm || devb->class->resume))
 		|| (devb->bus && (devb->bus->pm || devb->bus->resume)) ||
 		(devb->driver && devb->driver->pm))) {
@@ -153,7 +153,7 @@ void device_pm_move_after(struct device *deva, struct device *devb)
 	pr_debug("PM: Moving %s:%s after %s:%s\n",
 		 deva->bus ? deva->bus->name : "No Bus", dev_name(deva),
 		 devb->bus ? devb->bus->name : "No Bus", dev_name(devb));
-	if (!((devb->pm_domain) || (devb->type && devb->type->pm)
+	if (!((devb->pwr_domain) || (devb->type && devb->type->pm)
 		|| (devb->class && (devb->class->pm || devb->class->resume))
 		|| (devb->bus && (devb->bus->pm || devb->bus->resume)) ||
 		(devb->driver && devb->driver->pm))) {

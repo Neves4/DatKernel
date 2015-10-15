@@ -966,7 +966,7 @@ int device_add(struct device *dev)
 	error = dpm_sysfs_add(dev);
 	if (error)
 		goto DPMError;
-	if ((dev->pm_domain) || (dev->type && dev->type->pm)
+	if ((dev->pwr_domain) || (dev->type && dev->type->pm)
 		|| (dev->class && (dev->class->pm || dev->class->resume))
 		|| (dev->bus && (dev->bus->pm || dev->bus->resume)) ||
 		(dev->driver && dev->driver->pm)) {
