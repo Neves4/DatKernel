@@ -1,3 +1,3 @@
 # Clean old bulids
 
-make clean && make mrproper
+make clean mrproper
