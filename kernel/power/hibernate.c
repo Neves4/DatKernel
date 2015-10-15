@@ -260,7 +260,7 @@ static int create_image(int platform_mode)
 {
 	int error;
 
-	error = dpm_suspend_end(PMSG_FREEZE);
+	error = dpm_suspend_noirq(PMSG_FREEZE);
 	if (error) {
 		printk(KERN_ERR "PM: Some devices failed to power down, "
 			"aborting hibernation\n");
@@ -398,7 +398,7 @@ static int resume_target_kernel(bool platform_mode)
 {
 	int error;
 
-	error = dpm_suspend_end(PMSG_QUIESCE);
+	error = dpm_suspend_noirq(PMSG_QUIESCE);
 	if (error) {
 		printk(KERN_ERR "PM: Some devices failed to power down, "
 			"aborting resume\n");
@@ -516,7 +516,7 @@ int hibernation_platform_enter(void)
 		goto Resume_devices;
 	}
 
-	error = dpm_suspend_end(PMSG_HIBERNATE);
+	error = dpm_suspend_noirq(PMSG_HIBERNATE);
 	if (error)
 		goto Resume_devices;
 
