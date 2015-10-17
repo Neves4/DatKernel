@@ -1,0 +1,125 @@
+O que eu fiz até agora:
+- Compilei com Linaro 4.9.3 20015/06 - christopher83
+- Adicionei dynamic file sync (pasta fs, commits na sync.c e em outros) - faux123
+- Adicionei frandom (precisa colocar 00frandom toda vez na init.d) - Ryuinferno
+
+00frandom--
+
+#!/system/bin/sh
+# Script to launch frandom at boot by Ryuinferno @ XDA
+
+insmod /system/lib/modules/frandom.ko
+chmod 644 /dev/frandom
+chmod 644 /dev/erandom
+mv /dev/random /dev/random.ori
+mv /dev/urandom /dev/urandom.ori
+ln /dev/frandom /dev/random
+chmod 644 /dev/random
+ln /dev/erandom /dev/urandom
+chmod 644 /dev/urandom
+
+--
+
+- Arrumado memory leak em net/wireless/reg.c - Franco Kernel
+- Arrumado problema do SELINUX security/selinux/(multiple files) - Franco Kernel
+- Arrumado problema de cpufreq, quando min/max se sobrepõe - Saravana Kannan
+- Alterada função memcpy e memmove pela da glibc, no arquivo include/linux/memcopy.c, aumentando velocidade
+- random: entropy tweaks are all the rage nowadays (nextgen4k)
+- Input touchboost - Franco
+- Impedimento de estouro de memória, /driver/video - Franco Kernel
+- Corrigida problema de memória em tty - Franco Kernel
+- Kernel Freezer - Franco Kernel
+- Corrigido ftrace e trace no Kernel - Franco Kernel
+- Corrigido Audit/Futex/softirq - Franco Kernel
+- Corrigido problema em net/core - Franco Kernel
+- Adicionado algoritmo CRC32 otimizado - nextgen4k
+- Adicionados vários commits Kernel Tweaks - Franco Kernel
+
+r5 ---- 06/10/2015
+- Commit: https://github.com/franciscofranco/mako/commit/5877d7036c31fb08e769922c26a2ea43a0894247 (Commit de segurança, em caso de problema).
+- Commit: https://github.com/franciscofranco/mako/commit/715fed4ec790d1e45f989287c3d49ac403d16491 (Não trava na hora de limpar anycast).
+- Commit: https://github.com/CyanogenMod/android_kernel_huawei_msm8928/commit/3f68f84587933052117c4f55e58bee3643b92a55 (Simplificar rtmutex.h).
+- Corrigido typo em drivers/rtc/alarm.c (eu).
+
+r6 ---- 07/10/2015
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/af567a33e19d618a2b92ceb74b52c879e78d6903 (Patch do próprio Linus, para evitar competição entre funções executáveis).
+- Commit: https://github.com/CyanogenMod/android_kernel_lge_g3/commit/275f639c24049047ec342cc47e8c2a996176181c (desvia no primeiro erro de leitura do ext4).
+- Commit: https://github.com/CyanogenMod/android_kernel_lge_g3/commit/347341ae57d99deabc2b508d3d13600ef7e62da3 (Retirada do plug assíncrono, muito antiquado para disco igual o do celular).
+- Commit: https://github.com/CyanogenMod/android_kernel_lge_g3/commit/a195bcd0ef4ce04b7798a907f8a6706d8096e04a (workqueue: make all workqueues non-reentrant, parece uma boa).
+- Commit: https://github.com/sultanxda/android_kernel_oneplus_msm8974/commit/62cc3a1d90a2e66d3c0a49889c6b8d21a9bc9476 (Silenciar informações de debug do netfilter).
+- Commit: https://github.com/sultanxda/android_kernel_oneplus_msm8974/commit/e1891388e0a9a4685e73785fd22853a21dd08665 (por segurança, altera o policy do /proc antes de lançar).
+- Commit: https://github.com/sultanxda/android_kernel_oneplus_msm8974/commit/e20f3d615c8ff5619096b74283b46fb505a98312 (commit de segurança para proteger informações da memória).
+- Commit: https://github.com/sultanxda/android_kernel_oneplus_msm8974/commit/af76fd3df8ebc17e870a810f8874950425de46c0 (evita corrida do fs-writeback.c).
+-Commit: https://github.com/sultanxda/android_kernel_oneplus_msm8974/commit/0fc198786dc9bdbb2d801257ead740f3f946fcd5 (simplificar criptografia dos arquivos).
+
+r7 ---- 08/10/2015
+- Commit: https://github.com/flar2/ElementalX-N5/commit/edd4e850a58c73850422c72a8b58545a0043c1db (Retira conflitos do kvfree, provavelmente arrumando uma falha de segurança).
+- Commit: https://github.com/flar2/ElementalX-N5/commit/3b190b2d15c02d157a4c8e185ec83b8384afa90f (Biggest commit ever. Otimiza tempo de execução da leitura de memória)
+- Commit: https://github.com/flar2/ElementalX-N5/commit/ae3f2a12f4d54321608a41eb4309e600385001b9 (troca ordem da trava de memória, evitando bug).
+
+r8 ---- 09/10/2015
+- Commit: https://github.com/CyanogenMod/android_kernel_lge_g3/commit/9ee43a69fcc8e1457e9c750bc95cf505c90d114c (Faz com que rede 2G funcione com initrd).
+- Commit: https://github.com/CyanogenMod/android_kernel_lge_g3/commit/bb6a2caf1fb6e164d7708ef60e5389f7ac67658f (DM-REQ-CRYPT é mais propício para as requests de criptografia, pois suporta até 512kb sem problema).
+- Commit: https://gitlab.com/engstk/hammerhead/commit/41262d4d78b1eb93949042a91904382fff3d0116 (Permite que o tty se libere sem entrar em loop infinito em caso de erro).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_exynos5410/commit/5013b860800a0648b996f0a42a5c6aaba03ad06c (Mais um detector de deadlock na memória).
+- Commit: https://github.com/faux123/mako/commit/ff5702af25cd09cc1765d9399f382cf5a2d02589 (Utilização de árvores Red-Black na otimização do Low Memory Killer).
+- Atualizei a versão do BFQ para v7r8, fazendo backport do cyanogenmod 3.0.
+- Commit: https://github.com/CyanogenMod/android_kernel_huawei_msm8928/commit/624a79cee3c678b9898be7eaedd5701033014d1f (Melhora o tempo do cubic para não inflar o uso de memória).
+- Commit: https://github.com/CyanogenMod/android_kernel_huawei_msm8928/commit/113214a6ce905daf546099f5a380c5d3a7a53ee7 (diminuir carregamento da memória).
+
+Stable r9 ---- 10/10/2015
+- Nova tentativa, com os seguintes:
+- Commit: https://github.com/CyanogenMod/android_kernel_huawei_msm8928/commit/ad3f3f5141e55933b38627d8a5f87e3dd87c6047 (Faz com que um dos casos de fsync com o pai retorne, ao invés de entrar em loop).
+- Commit: https://github.com/CyanogenMod/android_kernel_huawei_msm8928/commit/b8b2a7d2d49addcc2ff68170dc82551c94bddf8b (Procura por buraco negro ou entrada inválida ao realizar rota ipv6).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_jf/commit/db6c390a258149666ccee4a0bea5f8c7acb033bc (Evita crash quando a CPU fica online/offline).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_jf/commit/1a50558ee53d308ac7bfac41496bce0a5a8724c3 (Aumenta tamanho readahead para 512, para melhorar o tempo de resposta da VM).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_jf/commit/8566a606c062d4ff1982250c96740e8b4e9c8758 (Conserta memmory leak no gpio da placa gráfica). 
+-Commit: https://github.com/CyanogenMod/android_kernel_huawei_msm8928/commit/f00b89bfa4aaf7573da96155e2b0841aa94ed3b6 (Corrigir corrupção de memória se não root).
+-Commit: https://github.com/CyanogenMod/android_kernel_samsung_jf/commit/bd3ccdba19b80e736b7844b6800fa9836fbca5af (Conserto problema de carregar 64 pra 32 bits).
+-Commit: https://github.com/CyanogenMod/android_kernel_samsung_jf/commit/917a35f64e9279b03988d88ef1acfd19f6d6f7b3 (Conserta travada quando o sitema está muito carregado).
+- Commit: https://github.com/CyanogenMod/android_kernel_huawei_msm8928/commit/6688d6a5dd67fbbd666132859a5da7a950bd55c8 (Arrumar deadlock no algortimo crypto).
+
+r10 ---- 11/10/2015
+- Consertado In file included from arch/arm/mach-capri/board_template.c:76:0,
+                 from arch/arm/mach-capri/board_ss_baffin.c:16:
+arch/arm/mach-capri/hw_cfg/CAPRI_SS_BAFFIN/caph_settings.h:42:34: warning: backslash and newline separated by space
+    .bt_sel_aud_route_gpio = 156, \.
+- Commit: https://github.com/CyanogenMod/android_kernel_motorola_msm8226/commit/4ad775022dcac8044899a0e34512ca0356b7661f (Tentativa de adicionar novas funções no freezer.h).
+- Commit: https://github.com/CyanogenMod/android_kernel_motorola_msm8226/commit/a963ce3d335dac502a89bad52c8df26c497d3e76 (Evita que acorde threads sem necessidade no binder.c).
+- Commit: https://github.com/CyanogenMod/android_kernel_motorola_msm8226/commit/8f2c13f80f87db953395cd87ac20ee21cfddc573 (Evita com que acorde threads sem necessidade no eventpool.c).
+- Commit: https://github.com/CyanogenMod/android_kernel_motorola_msm8226/commit/151c8d8ec46da092ab53e1046f26b1b58d8232cd (Evita com que acorde threads sem necessidade select.c).
+- Commit: https://github.com/CyanogenMod/android_kernel_motorola_msm8226/commit/8666f4857cd61a1a135ee7609a4203a9e5cf0af6 (Evita com que acorde threads sem necessidade no hrtimer.c).
+- COmmit: https://github.com/CyanogenMod/android_kernel_motorola_msm8226/commit/1b3829934a6c8b132c30cfb5390d413f0835cfb7 (mesmo do de cima futex.c).
+- Commit: https://github.com/CyanogenMod/android_kernel_motorola_msm8226/commit/a8067ee8713ccd215e4ab10bc7088e4dd6648f9a (mesmo do de cima).
+- Commit: https://github.com/CyanogenMod/android_kernel_motorola_msm8226/commit/0b014d5106699f6be4338d92932b44075e5d95cf (mesmo do de cima).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/60ba3db7e79d02325f0ba2a11246c74e30427d41 (Acrescenta algumas verificações no filesystem, para aumentar segurança na inserção).
+- Commit: https://lkml.org/lkml/2013/10/1/286 (prepare_to_wait_event foi um helper necessário).
+- Commit: https://github.com/torvalds/linux/blob/master/include/linux/wait.h (Vários helper adicionados do mainstream linux).
+
+r11 ---- 12/10/2015
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/bee5f3e274eef419680b1349540a9d8032c99289 (Conserta problema de dereferenciamento no ap_rose.c).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/e08ca6278c904bb6bbaadccdf6915b519c1fa142 (Arruma tempo de timeout drive/chars/impmi).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/842c36214f1d1715a30ede9430658411a349c839 (Usa kzalloc ao invés de kmalloc, para evitar erro).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/ea1e8ee07cdf7405111cfa9236935b3da1075f56 (Coloca um filtro para verificar ops no trace).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/c0e3f102c50b6bab71d4fe4232e45bf5c67b8be0 (Corrige parâmetro no ring do kernel passado errado).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/501e81d5d6b9434037851749c6194bf3a237b281 (Corrige loop infinito do multicast).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/5946d089379a35dda0e531710b48fca05446a196 (Verifica se não a largura não está fora da banda, ext4/extent).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/ddecdfcea0ae891f782ae853771c867ab51024c2 (Adiciona compilar JIT para os filtros).
+////////////////   TEM QUE USAR echo 1 > /proc/sys/net/core/bpf_jit_enable ///////////////////
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/ba4e97b49e74a7b1c6283e3d4d6dbe0c72b991af (Ajuda a descobrir qando ignorar eventos PHY).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/017fd99beb3ccdb301009fa8f905f574e3e3ce29 (Mais critérios para ignorar eventos PHY).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/350b59e331e49c018e55f9b4ab7a9638f3ca2707 (Arruma alguns casos de falha na memória).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/0c797892cfa290d60a425d863962d285801fee8b (Move verificação no extents para acabar com corrida).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/c79a54264db288e0fc221a4f39981feea15447ab (Corrige afinidade das CPUs que era feita erroneamente).
+= Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/4897576f6dd988ccdf4a0923e0e626fdc6e5f690 (Arruma typo no código do memstick).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/a12cb100975637baf203b140ffc56057b29bdb86 (Evita corrida no Kernel, do ptrace.c).
+- Commit: https://github.com/CyanogenMod/android_kernel_samsung_d2/commit/241cb82322f19f3194946cddfbb4a21c43f04e1b (Conserta caso default faltando no firmware/ihex2fw).
+
+r12v1 ---- 12/10/2015 ((DEU RUIM))
+- Ativado HAVE_BPF_JIT no defconfig.
+- Commit: https://github.com/torvalds/linux/commit/c8fc51cfa758be945c6113a4b446e0159070f768 (Arruma configurações incorreta do ulog).
+- SmartassH3 mudado o valor de sleep para 122800 vamos ver o que acontece. Subi o valor -> que era 768000 (#define DEFAULT_AWAKE_IDEAL_FREQ 800000)
+- #define DEFAULT_SLEEP_WAKEUP_FREQ 600000, reduzi o valor que era 768000.
+
+r12v2 ---- 12/10/2015
+Agora tudo no github UHULL 
