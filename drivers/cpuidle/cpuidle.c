@@ -262,9 +262,6 @@ int cpuidle_enable_device(struct cpuidle_device *dev)
 {
 	int ret, i;
 
-	if (!dev)
-		return -EINVAL;
-
 	if (dev->enabled)
 		return 0;
 	if (!cpuidle_get_driver() || !cpuidle_curr_governor)
@@ -393,9 +390,6 @@ int cpuidle_register_device(struct cpuidle_device *dev)
 {
 	int ret;
 
-	if (!dev)
-		return -EINVAL;
-
 	mutex_lock(&cpuidle_lock);
 
 	if ((ret = __cpuidle_register_device(dev))) {
@@ -409,6 +403,7 @@ int cpuidle_register_device(struct cpuidle_device *dev)
 	mutex_unlock(&cpuidle_lock);
 
 	return 0;
+
 }
 
 EXPORT_SYMBOL_GPL(cpuidle_register_device);
