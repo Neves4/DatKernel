@@ -875,11 +875,18 @@ void phy_state_machine(struct work_struct *work)
 			phydev->adjust_link(phydev->attached_dev);
 			break;
 		case PHY_RUNNING:
-			/* Only register a CHANGE if we are
-			 * polling */
-			if (PHY_POLL == phydev->irq)
-				phydev->state = PHY_CHANGELINK;
-			break;
+			/* Only register a CHANGE if we are polling or ignoring
+			 * interrupts and link changed since latest checking.
+	 		 */
+			if (!phy_interrupt_is_valid(phydev)) {
+				old_link = phydev->link;
+				err = phy_read_status(phydev);
+				if (err)
+					break;
+
+				if (old_link != phydev->link)
+					phydev->state = PHY_CHANGELINK;
+			}
 		case PHY_CHANGELINK:
 			err = phy_read_status(phydev);
 
