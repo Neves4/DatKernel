@@ -62,9 +62,9 @@ struct cpufreq_governor cpufreq_gov_hotplug = {
 };
 
 struct cpu_dbs_info_s {
-	cputime64_t prev_cpu_idle;
-	cputime64_t prev_cpu_wall;
-	cputime64_t prev_cpu_nice;
+	u64 prev_cpu_idle;
+	u64 prev_cpu_wall;
+	u64 prev_cpu_nice;
 	struct cpufreq_policy *cur_policy;
 	struct delayed_work work;
 	struct cpufreq_frequency_table *freq_table;
@@ -118,7 +118,7 @@ static struct dbs_tuners {
  * corner case: enabling io_is_busy might cause freq increase and disabling
  * might cause freq decrease, which probably matches the original intent.
  */
-static inline cputime64_t get_cpu_idle_time(unsigned int cpu, cputime64_t *wall)
+static inline u64 get_cpu_idle_time(unsigned int cpu, u64 *wall)
 {
         u64 idle_time;
         u64 iowait_time;
@@ -434,7 +434,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 	for_each_cpu(j, policy->cpus) {
 		unsigned int load;
 		unsigned int idle_time, wall_time;
-		cputime64_t cur_wall_time, cur_idle_time;
+		u64 cur_wall_time, cur_idle_time;
 		struct cpu_dbs_info_s *j_dbs_info;
 
 		j_dbs_info = &per_cpu(hp_cpu_dbs_info, j);
@@ -700,7 +700,7 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 static int __init cpufreq_gov_dbs_init(void)
 {
 	int err;
-	cputime64_t wall;
+	u64 wall;
 	u64 idle_time;
 	int cpu = get_cpu();
 
