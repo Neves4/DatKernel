@@ -15,7 +15,7 @@
 #include <linux/plist.h>
 #include <linux/version.h>
 #include <linux/notifier.h>
-#include <linux/pm_qos.h>
+#include <linux/pm_qos_params.h>
 #include <mach/pi_mgr.h>
 #include <asm/cputime.h>
 

@@ -41,7 +41,7 @@
 #include "vchiq_kona_arm.h"
 #include "vchiq_bi.h"
 
-#include <linux/pm_qos.h>
+#include <linux/pm_qos_params.h>
 
 static int use_memcpy;
 module_param(use_memcpy, bool, S_IRUGO|S_IWUSR);
