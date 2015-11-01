@@ -1232,6 +1232,7 @@ void install_exec_creds(struct linux_binprm *bprm)
 }
 EXPORT_SYMBOL(install_exec_creds);
 
+<<<<<<< HEAD
 static void bprm_fill_uid(struct linux_binprm *bprm)
 {
 	struct inode *inode;
@@ -1271,18 +1272,33 @@ static void bprm_fill_uid(struct linux_binprm *bprm)
 	}
 }
 
+=======
+>>>>>>> d5b9280... Revert "fs: take i_mutex during prepare_binprm for set[ug]id executables"
 /*
  * determine how safe it is to execute the proposed program
  * - the caller must hold ->cred_guard_mutex to protect against
  *   PTRACE_ATTACH
  */
+<<<<<<< HEAD
 int check_unsafe_exec(struct linux_binprm *bprm)
+=======
+static int check_unsafe_exec(struct linux_binprm *bprm)
+>>>>>>> d5b9280... Revert "fs: take i_mutex during prepare_binprm for set[ug]id executables"
 {
 	struct task_struct *p = current, *t;
 	unsigned n_fs;
 	int res = 0;
 
+<<<<<<< HEAD
 	bprm->unsafe = tracehook_unsafe_exec(p);
+=======
+	if (p->ptrace) {
+		if (p->ptrace & PT_PTRACE_CAP)
+			bprm->unsafe |= LSM_UNSAFE_PTRACE_CAP;
+		else
+			bprm->unsafe |= LSM_UNSAFE_PTRACE;
+	}
+>>>>>>> d5b9280... Revert "fs: take i_mutex during prepare_binprm for set[ug]id executables"
 
 	n_fs = 1;
 	spin_lock(&p->fs->lock);
@@ -1315,12 +1331,36 @@ int check_unsafe_exec(struct linux_binprm *bprm)
  */
 int prepare_binprm(struct linux_binprm *bprm)
 {
+	umode_t mode;
+	struct inode * inode = bprm->file->f_path.dentry->d_inode;
 	int retval;
 
+	mode = inode->i_mode;
 	if (bprm->file->f_op == NULL)
 		return -EACCES;
 
-	bprm_fill_uid(bprm);
+	/* clear any previous set[ug]id data from a previous binary */
+	bprm->cred->euid = current_euid();
+	bprm->cred->egid = current_egid();
+
+	if (!(bprm->file->f_path.mnt->mnt_flags & MNT_NOSUID)) {
+		/* Set-uid? */
+		if (mode & S_ISUID) {
+			bprm->per_clear |= PER_CLEAR_ON_SETID;
+			bprm->cred->euid = inode->i_uid;
+		}
+
+		/* Set-gid? */
+		/*
+		 * If setgid is set but no group execute bit then this
+		 * is a candidate for mandatory locking, not a setgid
+		 * executable.
+		 */
+		if ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP)) {
+			bprm->per_clear |= PER_CLEAR_ON_SETID;
+			bprm->cred->egid = inode->i_gid;
+		}
+	}
 
 	/* fill in binprm security blob */
 	retval = security_bprm_set_creds(bprm);
