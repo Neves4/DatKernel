@@ -791,7 +791,6 @@ int kona_timer_disable_and_clear(struct kona_timer *kt)
 {
 	struct kona_timer_module *ktm;
 	unsigned long flags;
-	int cpu = smp_processor_id();
 
 	if (NULL == kt)
 		return -1;
