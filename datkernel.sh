@@ -13,7 +13,7 @@ echo -e "==============================================="
 
 export ARCH=arm
 export SUBARCH=arm
-export CROSS_COMPILE=~/android/kernel/toolchains/linaro4.9-2015/bin/arm-eabi-
+export CROSS_COMPILE=~/android/kernel/toolchains/archi5.2/bin/arm-eabi-
 
 echo -e ""
 
