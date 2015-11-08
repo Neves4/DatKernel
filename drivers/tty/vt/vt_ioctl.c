@@ -154,14 +154,11 @@ static void vt_event_wait(struct vt_event_wait *vw)
 }
 
 /**
-
-/**
  *	vt_event_wait_ioctl	-	event ioctl handler
  *	@arg: argument to ioctl
  *
  *	Implement the VT_WAITEVENT ioctl using the VT event interface
  */
-
 static int vt_event_wait_ioctl(struct vt_event __user *event)
 {
 	struct vt_event_wait vw;
