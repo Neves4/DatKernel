@@ -2359,7 +2359,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
 	if (scanning_global_lru(sc))
 		count_vm_event(ALLOCSTALL);
 
-	do {
+	for (priority = DEF_PRIORITY; priority >= 0; priority--) {
 		vmpressure_prio(sc->gfp_mask, sc->mem_cgroup, priority);
 		sc->nr_scanned = 0;
 		if (!priority)
@@ -2413,7 +2413,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
 						&preferred_zone);
 			wait_iff_congested(preferred_zone, BLK_RW_ASYNC, HZ/10);
 		}
-	} while (--priority >= 0);
+	}
 
 out:
 	delayacct_freepages_end();
