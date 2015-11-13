@@ -1,11 +1,9 @@
-config XVMALLOC
-	bool
-	default n
-
 config ZRAM
 	tristate "Compressed RAM block device support"
-	depends on BLOCK && SYSFS
-	select XVMALLOC
+	# X86 dependency is because zsmalloc uses non-portable pte/tlb
+	# functions
+	depends on BLOCK && SYSFS && X86
+	select ZSMALLOC
 	select LZO_COMPRESS
 	select LZO_DECOMPRESS
 	default n
@@ -20,19 +18,6 @@ config ZRAM
 
 	  See zram.txt for more information.
 	  Project home: http://compcache.googlecode.com/
-
-config ZRAM_LZ4_COMPRESS
-	bool "Enable LZ4 algorithm support"
-	depends on ZRAM
-	select LZ4_COMPRESS
-	select LZ4_DECOMPRESS
-	default n
-	help
-	  This option enables LZ4 compression algorithm support, instead
-	  of the default LZO.  LZ4 may be faster on some architectures
-	  compared to LZO compression.
-
-	  See https://code.google.com/p/lz4/ for more information about LZ4.
 
 config ZRAM_DEBUG
 	bool "Compressed RAM block device debug support"
