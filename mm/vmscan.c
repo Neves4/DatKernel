@@ -2178,6 +2178,10 @@ restart:
 	if (inactive_anon_is_low(zone, sc))
 		shrink_active_list(SWAP_CLUSTER_MAX, zone, sc, priority, 0);
 
+	vmpressure(sc->gfp_mask, sc->mem_cgroup,
+			   sc->nr_scanned - nr_scanned,
+			   sc->nr_reclaimed - nr_reclaimed);
+
 	/* reclaim/compaction might need reclaim to continue */
 	if (should_continue_reclaim(zone, nr_reclaimed,
 					sc->nr_scanned - nr_scanned, sc))
