@@ -84,39 +84,6 @@ static int freq_table_get_index(const struct cpufreq_stats *stat,
 	return -1;
 }
 
-static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu,
-							u64 *wall)
-{
-	u64 idle_time;
-	u64 cur_wall_time;
-	u64 busy_time;
-
-	cur_wall_time = jiffies64_to_cputime64(get_jiffies_64());
-	busy_time = cputime64_add(kstat_cpu(cpu).cpustat.user,
-			kstat_cpu(cpu).cpustat.system);
-
-	busy_time = cputime64_add(busy_time, kstat_cpu(cpu).cpustat.irq);
-	busy_time = cputime64_add(busy_time, kstat_cpu(cpu).cpustat.softirq);
-	busy_time = cputime64_add(busy_time, kstat_cpu(cpu).cpustat.steal);
-	busy_time = cputime64_add(busy_time, kstat_cpu(cpu).cpustat.nice);
-
-	idle_time = cputime64_sub(cur_wall_time, busy_time);
-	if (wall)
-		*wall = (u64)jiffies_to_usecs(cur_wall_time);
-
-	return (u64)jiffies_to_usecs(idle_time);
-}
-
-static inline u64 get_cpu_idle_time(unsigned int cpu, u64 *wall)
-{
-	u64 idle_time = get_cpu_idle_time_us(cpu, wall);
-
-	if (idle_time == -1ULL)
-		return get_cpu_idle_time_jiffy(cpu, wall);
-
-	return idle_time;
-}
-
 static int cpufreq_profile_start(unsigned int cpu)
 {
 	unsigned int freq, freq_index;
@@ -138,7 +105,7 @@ static int cpufreq_profile_start(unsigned int cpu)
 	}
 
 	stat->prev_index = freq_table_get_index(stat, freq);
-	stat->prev_idle_time = get_cpu_idle_time(cpu, &stat->prev_wall_time);
+	stat->prev_idle_time = get_cpu_idle_time(cpu, &stat->prev_wall_time, 0);
 
 	spin_unlock(&cpufreq_profile_lock);
 
@@ -161,7 +128,7 @@ static int cpufreq_profile_stop(unsigned int cpu)
 
 	spin_lock(&cpufreq_profile_lock);
 
-	cur_idle_time = get_cpu_idle_time(cpu, &cur_wall_time);
+	cur_idle_time = get_cpu_idle_time(cpu, &cur_wall_time, 0);
 
 	wall_time = cputime64_sub(cur_wall_time, stat->prev_wall_time);
 	idle_time = cputime64_sub(cur_idle_time, stat->prev_idle_time);
@@ -179,7 +146,7 @@ static int cpufreq_profile_update(unsigned int cpu, unsigned int freq_index)
 	struct cpufreq_stats *stat;
 	u64 cur_wall_time, cur_idle_time, wall_time, idle_time;
 
-	cur_idle_time = get_cpu_idle_time(cpu, &cur_wall_time);
+	cur_idle_time = get_cpu_idle_time(cpu, &cur_wall_time, 0);
 	stat = per_cpu(cpufreq_stats_table, cpu);
 
 	wall_time = cputime64_sub(cur_wall_time, stat->prev_wall_time);
