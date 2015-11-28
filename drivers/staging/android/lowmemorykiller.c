@@ -60,17 +60,21 @@ static uint32_t lowmem_debug_level = 1;
 static int lowmem_adj[6] = {
 	0,
 	1,
-	6,
-	12,
+	3,
+	5,
+	7,
+	15,
 };
-static int lowmem_adj_size = 4;
+static int lowmem_adj_size = 6;
 static int lowmem_minfree[6] = {
-	3 * 512,	/* 6MB */
-	2 * 1024,	/* 8MB */
-	4 * 1024,	/* 16MB */
-	16 * 1024,	/* 64MB */
+	 5 *  256,	/* Foreground App: 		5 MB	*/
+	 5 *  512,	/* Visible App: 		10 MB	*/
+	 5 * 1024,	/* Secondary Server: 	20 MB	*/
+	15 *  512,	/* Hidden App: 			30 MB	*/
+	15 * 1024,	/* Content Provider: 	60 MB	*/
+	20 * 1024,	/* Empty App: 			80 MB	*/
 };
-static int lowmem_minfree_size = 4;
+static int lowmem_minfree_size = 6;
 static int lmk_fast_run = 1;
 
 static unsigned long lowmem_deathpending_timeout;
