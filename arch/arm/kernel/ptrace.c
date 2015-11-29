@@ -22,6 +22,7 @@
 #include <linux/perf_event.h>
 #include <linux/hw_breakpoint.h>
 #include <linux/regset.h>
+#include <linux/unistd.h>
 
 #include <asm/pgtable.h>
 #include <asm/system.h>
