@@ -205,7 +205,7 @@ static char custom_profile[20] = "custom";			// ZZ: name to show in sysfs if any
 
 #if (defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) && !defined(DISABLE_POWER_MANAGEMENT)) || defined(USE_LCD_NOTIFIER)
 // ZZ: tuneable defaults for early suspend
-#define DEF_DISABLE_SLEEP_MODE				(1)	// ZZ: default for sleep mode switch
+#define DEF_DISABLE_SLEEP_MODE				(0)	// ZZ: default for sleep mode switch
 #define MAX_SAMPLING_RATE_SLEEP_MULTIPLIER		(8)	// ZZ: default maximum for sampling rate sleep multiplier
 #define DEF_SAMPLING_RATE_SLEEP_MULTIPLIER		(2)	// ZZ: default sampling rate sleep multiplier
 #define DEF_UP_THRESHOLD_SLEEP				(90)	// ZZ: default up threshold sleep
