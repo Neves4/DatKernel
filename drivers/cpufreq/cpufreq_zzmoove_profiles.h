@@ -30,7 +30,7 @@
  * -  (7)'zzmod'  -> ZaneZam Moderate     -> NEW! setting based on 'zzopt' which has mainly (but not strictly only!) 2 cores online         -
  * ------------------------------------------------------------------------------------------------------------------------------------------
  * -  (8)'zzperf' -> ZaneZam Performance  -> all you can get from zzmoove in terms of performance but still has the fast                    -
- * -                                         down scaling/hotplugging behaving                                                              -
+ * -                                         down scaling/hotplugging behavior                                                              -
  * ------------------------------------------------------------------------------------------------------------------------------------------
  * -  (9)'zzinz'  -> ZaneZam InZane       -> NEW! based on performance with new insane scaling active. a new experience!                    -
  * ------------------------------------------------------------------------------------------------------------------------------------------
