@@ -36,29 +36,29 @@
 
 /* Tuning Interface */
 #ifdef CONFIG_MACH_LGE
-#define FREQ_RESPONSIVENESS		2265600
+#define FREQ_RESPONSIVENESS			2265600
 #else
-#define FREQ_RESPONSIVENESS		1200000
+#define FREQ_RESPONSIVENESS			1200000
 #endif
 
-#define CPUS_DOWN_RATE			2
-#define CPUS_UP_RATE			1
+#define CPUS_DOWN_RATE				2
+#define CPUS_UP_RATE				1
 
-#define DEC_CPU_LOAD			70
+#define DEC_CPU_LOAD				70
 #define DEC_CPU_LOAD_AT_MIN_FREQ	60
 
-#define INC_CPU_LOAD			70
+#define INC_CPU_LOAD				70
 #define INC_CPU_LOAD_AT_MIN_FREQ	60
 
 /* Pump Inc/Dec for all cores */
 #define PUMP_INC_STEP_AT_MIN_FREQ	2
-#define PUMP_INC_STEP			2
+#define PUMP_INC_STEP				2
 #define PUMP_DEC_STEP_AT_MIN_FREQ	2
-#define PUMP_DEC_STEP			1
+#define PUMP_DEC_STEP				1
 
 /* sample rate */
-#define MIN_SAMPLING_RATE		10000
-#define SAMPLING_RATE			50000
+#define MIN_SAMPLING_RATE			10000
+#define SAMPLING_RATE				50000
 
 static void do_alucard_timer(struct work_struct *work);
 
