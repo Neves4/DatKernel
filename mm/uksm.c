@@ -168,7 +168,7 @@ static int is_full_zero(const void *s1, size_t len)
 #else
 static int is_full_zero(const void *s1, size_t len)
 {
-	unsigned long *src = s1;
+	const unsigned long *src = s1;
 	int i;
 
 	len /= sizeof(*src);
@@ -515,7 +515,7 @@ static unsigned int uksm_sleep_jiffies;
 /* Base CPU limit that ratios are scaled against */
 static unsigned int uksm_max_cpu_percentage;
 
-static int uksm_cpu_governor = 3;
+static int uksm_cpu_governor = 1;
 
 static char *uksm_cpu_governor_str[4] = { "full", "medium", "low", "quiet" };
 
@@ -1337,10 +1337,10 @@ static inline u32 page_hash(struct page *page, unsigned long hash_strength,
 	u32 val;
 	unsigned long delta;
 
-	void *addr = kmap_atomic(page, KM_USER0);
+	void *addr = kmap_atomic(page);
 
 	val = random_sample_hash(addr, hash_strength);
-	kunmap_atomic(addr, KM_USER0);
+	kunmap_atomic(addr);
 
 	if (cost_accounting) {
 		if (HASH_STRENGTH_FULL > hash_strength)
@@ -1360,11 +1360,11 @@ static int memcmp_pages(struct page *page1, struct page *page2,
 	char *addr1, *addr2;
 	int ret;
 
-	addr1 = kmap_atomic(page1, KM_USER0);
-	addr2 = kmap_atomic(page2, KM_USER1);
+	addr1 = kmap_atomic(page1);
+	addr2 = kmap_atomic(page2);
 	ret = memcmp(addr1, addr2, PAGE_SIZE);
-	kunmap_atomic(addr2, KM_USER1);
-	kunmap_atomic(addr1, KM_USER0);
+	kunmap_atomic(addr2);
+	kunmap_atomic(addr1);
 
 	if (cost_accounting)
 		inc_rshash_neg(memcmp_cost);
@@ -1382,9 +1382,9 @@ static inline int is_page_full_zero(struct page *page)
 	char *addr;
 	int ret;
 
-	addr = kmap_atomic(page, KM_USER0);
+	addr = kmap_atomic(page);
 	ret = is_full_zero(addr, PAGE_SIZE);
-	kunmap_atomic(addr, KM_USER0);
+	kunmap_atomic(addr);
 
 	return ret;
 }
@@ -1398,15 +1398,22 @@ static int write_protect_page(struct vm_area_struct *vma, struct page *page,
 	spinlock_t *ptl;
 	int swapped;
 	int err = -EFAULT;
+	unsigned long mmun_start;	/* For mmu_notifiers */
+	unsigned long mmun_end;		/* For mmu_notifiers */
 
 	addr = page_address_in_vma(page, vma);
 	if (addr == -EFAULT)
 		goto out;
 
 	BUG_ON(PageTransCompound(page));
+
+	mmun_start = addr;
+	mmun_end   = addr + PAGE_SIZE;
+	mmu_notifier_invalidate_range_start(mm, mmun_start, mmun_end);
+
 	ptep = page_check_address(page, mm, addr, &ptl, 0);
 	if (!ptep)
-		goto out;
+		goto out_mn;
 
 	if (old_pte)
 		*old_pte = *ptep;
@@ -1444,6 +1451,8 @@ static int write_protect_page(struct vm_area_struct *vma, struct page *page,
 
 out_unlock:
 	pte_unmap_unlock(ptep, ptl);
+out_mn:
+	mmu_notifier_invalidate_range_end(mm, mmun_start, mmun_end);
 out:
 	return err;
 }
@@ -1476,6 +1485,8 @@ static int replace_page(struct vm_area_struct *vma, struct page *page,
 
 	unsigned long addr;
 	int err = MERGE_ERR_PGERR;
+	unsigned long mmun_start;	/* For mmu_notifiers */
+	unsigned long mmun_end;		/* For mmu_notifiers */
 
 	addr = page_address_in_vma(page, vma);
 	if (addr == -EFAULT)
@@ -1494,10 +1505,14 @@ static int replace_page(struct vm_area_struct *vma, struct page *page,
 	if (!pmd_present(*pmd))
 		goto out;
 
+	mmun_start = addr;
+	mmun_end   = addr + PAGE_SIZE;
+	mmu_notifier_invalidate_range_start(mm, mmun_start, mmun_end);
+
 	ptep = pte_offset_map_lock(mm, pmd, addr, &ptl);
 	if (!pte_same(*ptep, orig_pte)) {
 		pte_unmap_unlock(ptep, ptl);
-		goto out;
+		goto out_mn;
 	}
 
 	flush_cache_page(vma, addr, pte_pfn(*ptep));
@@ -1522,6 +1537,8 @@ static int replace_page(struct vm_area_struct *vma, struct page *page,
 
 	pte_unmap_unlock(ptep, ptl);
 	err = 0;
+out_mn:
+	mmu_notifier_invalidate_range_end(mm, mmun_start, mmun_end);
 out:
 	return err;
 }
@@ -1542,11 +1559,11 @@ static inline u32 page_hash_max(struct page *page, u32 hash_old)
 	u32 hash_max = 0;
 	void *addr;
 
-	addr = kmap_atomic(page, KM_USER0);
+	addr = kmap_atomic(page);
 	hash_max = delta_hash(addr, hash_strength,
 			      HASH_STRENGTH_MAX, hash_old);
 
-	kunmap_atomic(addr, KM_USER0);
+	kunmap_atomic(addr);
 
 	if (!hash_max)
 		hash_max = 1;
@@ -1594,7 +1611,7 @@ static inline int check_collision(struct rmap_item *rmap_item,
 static struct page *page_trans_compound_anon(struct page *page)
 {
 	if (PageTransCompound(page)) {
-		struct page *head = compound_trans_head(page);
+		struct page *head = compound_head(page);
 		/*
 		 * head may actually be splitted and freed from under
 		 * us but it's ok here.
@@ -2661,7 +2678,7 @@ out:
  * to the next pass of ksmd - consider, for example, how ksmd might be
  * in cmp_and_merge_page on one of the rmap_items we would be removing.
  */
-inline int unmerge_uksm_pages(struct vm_area_struct *vma,
+static inline int unmerge_uksm_pages(struct vm_area_struct *vma,
 		      unsigned long start, unsigned long end)
 {
 	unsigned long addr;
@@ -3751,11 +3768,11 @@ static void stable_tree_delta_hash(u32 prev_hash_strength)
 		if (node->tree_node) {
 			hash = node->tree_node->hash;
 
-			addr = kmap_atomic(node_page, KM_USER0);
+			addr = kmap_atomic(node_page);
 
 			hash = delta_hash(addr, prev_hash_strength,
 					  hash_strength, hash);
-			kunmap_atomic(addr, KM_USER0);
+			kunmap_atomic(addr);
 		} else {
 			/*
 			 *it was not inserted to rbtree due to collision in last
@@ -4156,7 +4173,7 @@ static inline void cleanup_vma_slots(void)
 static inline unsigned int rung_cpu_divisor(int cpu_time_ratio)
 {
 	unsigned long ret = RATIO_SCALE;
-  
+
 	if (cpu_time_ratio < 0) {
 		ret = (ret * TIME_RATIO_SCALE) / (-cpu_time_ratio);
 		ret = (ret * 100) / uksm_max_cpu_percentage;
@@ -4172,7 +4189,6 @@ static inline unsigned int rung_cpu_divisor(int cpu_time_ratio)
 
 	return (unsigned int) ret;
 }
-
 static void uksm_calc_scan_pages(void)
 {
 	struct scan_rung *ladder = uksm_scan_ladder;
@@ -4496,6 +4512,7 @@ rm_slot:
 
 		if (mmsem_batch) {
 			up_read(&slot->vma->vm_mm->mmap_sem);
+			mmsem_batch = 0;
 			cond_resched();
 		}
 
@@ -4680,7 +4697,8 @@ out:
 	return referenced;
 }
 
-int try_to_unmap_ksm(struct page *page, enum ttu_flags flags)
+int try_to_unmap_ksm(struct page *page, enum ttu_flags flags,
+			struct vm_area_struct *target_vma)
 {
 	struct stable_node *stable_node;
 	struct node_vma *node_vma;
@@ -4877,7 +4895,7 @@ static int uksm_memory_callback(struct notifier_block *self,
 	static struct kobj_attribute _name##_attr = __ATTR_RO(_name)
 #define UKSM_ATTR(_name) \
 	static struct kobj_attribute _name##_attr = \
-		__ATTR(_name, 0666, _name##_show, _name##_store)
+		__ATTR(_name, 0644, _name##_show, _name##_store)
 
 static ssize_t max_cpu_percentage_show(struct kobject *kobj,
 				    struct kobj_attribute *attr, char *buf)
@@ -4924,7 +4942,7 @@ static ssize_t sleep_millisecs_store(struct kobject *kobj,
 		return -EBUSY;
 
 	err = strict_strtoul(buf, 10, &msecs);
-	if (err || msecs > 60000)
+	if (err || msecs > MSEC_PER_SEC)
 		return -EINVAL;
 
 	uksm_sleep_jiffies = msecs_to_jiffies(msecs);
@@ -4932,29 +4950,6 @@ static ssize_t sleep_millisecs_store(struct kobject *kobj,
 	return count;
 }
 UKSM_ATTR(sleep_millisecs);
-
-static ssize_t cpu_governor_numeric_show(struct kobject *kobj,
-                                    struct kobj_attribute *attr, char *buf)
-{
-  return sprintf(buf, "%u\n", uksm_cpu_governor);
-}
-
-static ssize_t cpu_governor_numeric_store(struct kobject *kobj,
-                                     struct kobj_attribute *attr,
-                                     const char *buf, size_t count)
-{
-  unsigned long input;
-  int err;
-    
-  err = strict_strtoul(buf, 10, &input);
-  if (err || input < 0 || input > 3)
-    return -EINVAL;
-    
-  uksm_cpu_governor = input;
-    
-  return count;
-}
-UKSM_ATTR(cpu_governor_numeric);
 
 
 static ssize_t cpu_governor_show(struct kobject *kobj,
@@ -5418,7 +5413,6 @@ static struct attribute_group uksm_attr_group = {
 	.name = "uksm",
 };
 
-
 static ssize_t pages_volatile_show(struct kobject *kobj,
 				struct kobj_attribute *attr, char *buf)
 {
@@ -5515,15 +5509,15 @@ static inline int cal_positive_negative_costs(void)
 	if (!p2)
 		return -ENOMEM;
 
-	addr1 = kmap_atomic(p1, KM_USER0);
-	addr2 = kmap_atomic(p2, KM_USER1);
+	addr1 = kmap_atomic(p1);
+	addr2 = kmap_atomic(p2);
 	memset(addr1, random32(), PAGE_SIZE);
 	memcpy(addr2, addr1, PAGE_SIZE);
 
 	/* make sure that the two pages differ in last byte */
 	addr2[PAGE_SIZE-1] = ~addr2[PAGE_SIZE-1];
-	kunmap_atomic(addr2, KM_USER1);
-	kunmap_atomic(addr1, KM_USER0);
+	kunmap_atomic(addr2);
+	kunmap_atomic(addr1);
 
 	time_start = jiffies;
 	while (jiffies - time_start < 100) {
@@ -5557,9 +5551,9 @@ static int init_zeropage_hash_table(void)
 	if (!page)
 		return -ENOMEM;
 
-	addr = kmap_atomic(page, KM_USER0);
+	addr = kmap_atomic(page);
 	memset(addr, 0, PAGE_SIZE);
-	kunmap_atomic(addr, KM_USER0);
+	kunmap_atomic(addr);
 
 	zero_hash_table = kmalloc(HASH_STRENGTH_MAX * sizeof(u32),
 		GFP_KERNEL);
@@ -5675,10 +5669,23 @@ int ksm_madvise(struct vm_area_struct *vma, unsigned long start,
 }
 
 /* Common interface to ksm, actually the same. */
-struct page *ksm_does_need_to_copy(struct page *page,
+struct page *ksm_might_need_to_copy(struct page *page,
 			struct vm_area_struct *vma, unsigned long address)
 {
+	struct anon_vma *anon_vma = page_anon_vma(page);
 	struct page *new_page;
+
+	if (PageKsm(page)) {
+		if (page_stable_node(page))
+			return page;	/* no need to copy it */
+	} else if (!anon_vma) {
+		return page;		/* no need to copy it */
+	} else if (anon_vma->root == vma->anon_vma->root &&
+		 page->index == linear_page_index(vma, address)) {
+		return page;		/* still no need to copy it */
+	}
+	if (!PageUptodate(page))
+		return page;		/* let do_swap_page report the error */
 
 	new_page = alloc_page_vma(GFP_HIGHUSER_MOVABLE, vma, address);
 	if (new_page) {
@@ -5686,13 +5693,7 @@ struct page *ksm_does_need_to_copy(struct page *page,
 
 		SetPageDirty(new_page);
 		__SetPageUptodate(new_page);
-		SetPageSwapBacked(new_page);
 		__set_page_locked(new_page);
-
-		if (page_evictable(new_page, vma))
-			lru_cache_add_lru(new_page, LRU_ACTIVE_ANON);
-		else
-			add_page_to_unevictable_list(new_page);
 	}
 
 	return new_page;
@@ -5768,4 +5769,3 @@ module_init(uksm_init)
 #else
 late_initcall(uksm_init);
 #endif
-
